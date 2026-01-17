@@ -26,14 +26,17 @@ export async function createProject(name: client["name"], clientId: client["id"]
 }
 
 export async function deleteProject(id: project["id"]) {
-  const userId = db.prepare('SELECT clientId FROM projects WHERE id = (?)').get(id)
+  const row = db.prepare('SELECT clientId FROM projects WHERE id = (?)').get(id) as { clientId: client["id"] } | undefined;
+  const clientId: client["id"] | null = row ? row.clientId : null;
   db.prepare('DELETE FROM projects WHERE id = (?)').run(id);
-  db.prepare('UPDATE clients SET projects = projects +1 WHERE id = (?)').run(userId)
+  if (clientId !== null && typeof clientId !== 'undefined') {
+    db.prepare('UPDATE clients SET projects = projects - 1 WHERE id = (?)').run(clientId);
+  }
   revalidatePath('/');
 }
 
 export async function deleteClient(id: client["id"]) {
-  db.prepare('DELETE FROM projects WHERE clientID = (?)').run(id);
+  db.prepare('DELETE FROM projects WHERE clientId = (?)').run(id);
   db.prepare('DELETE FROM clients WHERE id = (?)').run(id);
   revalidatePath('/');
 }
