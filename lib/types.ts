@@ -1,49 +1,42 @@
-export interface client {
-    id:  number,
-    name: string,
-    email: string,
-    projects: number,
-    createdAt: string,
-    updatedAt: string,
-    responsiblePerson?: number,
-    responsibleTeam?: number,
-    type: "person" | "team",
+// User Interface (dein ehemaliges "profile") - Better Auth managed
+export interface User {
+	id: string, // Better Auth nutzt string IDs
+	name: string,
+	email: string,
+	initialized: boolean,
+	// Teams werden über Better Auth Organization verwaltet
 }
 
-export interface profile {
-    id: number,
-    name: string,
-    email: string, 
-    isTeamAccount: boolean,
-    team?: number[],
+// Client bleibt größtenteils gleich
+export interface Client {
+	id: number,
+	name: string,
+	email: string,
+	projects: number,
+	createdAt: string,
+	updatedAt: string,
+	responsiblePersonId ? : string, // Better Auth User ID
+	responsibleOrganizationId ? : string, // Better Auth Organization ID
+	type: "person" | "organization",
 }
 
-export interface project {
-    id: number,
-    title: string,
-    clientId: number,
-    finished: boolean,
-    isTeamProject: boolean,
-    team?: number,
-    teamMembers?: number[],
-    createdAt: string,
-    updatedAt: string,
+// Project mit Better Auth Organization/Team Referenzen
+export interface Project {
+	id: number,
+	title: string,
+	clientId: number,
+	finished: boolean,
+	organizationId ? : string, // Better Auth Organization
+	teamId ? : string, // Better Auth Team
+	createdAt: string,
+	updatedAt: string,
 }
 
-export interface deletion {
-    projectId: number,
-    clientId: number,
-    status: string,
+// Deletion bleibt gleich
+export interface Deletion {
+	projectId: number,
+	clientId: number,
+	status: string,
 }
 
-export interface team {
-    id: number,
-    name: string,
-    owner: number,
-    admins: number[],
-    members: number[],
-    projects: project[],
-    createdAt: string,
-    updatedAt: string,
-    createdBy: number,
-}
+// Team Interface entfällt - wird durch Better Auth Organization ersetzt

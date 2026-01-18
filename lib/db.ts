@@ -2,7 +2,8 @@ import Database from 'better-sqlite3';
 
 const db = new Database('dev.db');
 
-// Deine bestehenden Tabellen
+// Nur noch deine Business-spezifischen Tabellen
+// Better Auth erstellt automatisch: user, session, account, organization, member, team, invitation
 db.exec(`
   CREATE TABLE IF NOT EXISTS clients (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -11,9 +12,9 @@ db.exec(`
     projects INTEGER DEFAULT 0,
     createdAt TEXT DEFAULT CURRENT_TIMESTAMP,
     updatedAt TEXT DEFAULT CURRENT_TIMESTAMP,
-    responsiblePerson INTEGER,
-    responsibleTeam INTEGER,
-    type TEXT CHECK(type IN ('person', 'team')) NOT NULL
+    responsiblePersonId INTEGER, -- Better Auth User ID (string)
+    responsibleOrganizationId TEXT, -- Better Auth Organization ID (string)
+    type TEXT CHECK(type IN ('person', 'organization')) NOT NULL
   );
 
   CREATE TABLE IF NOT EXISTS projects (
@@ -21,24 +22,11 @@ db.exec(`
     title TEXT NOT NULL,
     clientId INTEGER,
     finished BOOLEAN DEFAULT FALSE,
-    isTeamProject BOOLEAN DEFAULT FALSE,
-    team INTEGER,
-    teamMembers TEXT, -- JSON string für Array
+    organizationId TEXT, -- Better Auth Organization ID
+    teamId TEXT, -- Better Auth Team ID
     createdAt TEXT DEFAULT CURRENT_TIMESTAMP,
     updatedAt TEXT DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (clientId) REFERENCES clients (id)
-  );
-
-  CREATE TABLE IF NOT EXISTS teams (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL,
-    owner INTEGER,
-    admins TEXT, -- JSON string für Array
-    members TEXT, -- JSON string für Array
-    projects TEXT, -- JSON string für Array
-    createdAt TEXT DEFAULT CURRENT_TIMESTAMP,
-    updatedAt TEXT DEFAULT CURRENT_TIMESTAMP,
-    createdBy INTEGER
   );
 
   CREATE TABLE IF NOT EXISTS deletions (

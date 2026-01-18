@@ -1,6 +1,16 @@
-import { createAuthClient } from "better-auth/react"
+import { createAuthClient } from "better-auth/react"; // Use React import
+import { organizationClient } from "better-auth/client/plugins";
+import { inferAdditionalFields } from "better-auth/client/plugins";
+import { auth } from "./auth";
+
 export const authClient = createAuthClient({
-    /** The base URL of the server (optional if you're using the same domain) */
-    baseURL: "http://localhost:3000"
-})
-export const { signIn, signUp, useSession } = createAuthClient()
+	plugins: [
+		organizationClient({
+			teams: {
+				enabled: true,
+			},
+		}),
+		inferAdditionalFields < typeof auth > (),
+	],
+	baseURL: "http://localhost:3000"
+});

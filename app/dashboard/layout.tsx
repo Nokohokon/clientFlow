@@ -5,6 +5,7 @@ import { HeroHeading } from "@/components/design/headings/HeroHeading";
 import Image from "next/image";
 import Sidebar from "@/components/layout/sidebar";
 import Breadcrumb from "@/components/layout/Breadcrumb";
+import Welcome from "@/components/layout/dashboard/Welcome";
 
 
 const geistSans = Geist({
@@ -35,11 +36,14 @@ export default function RootLayout({
         <main>
             <div className="flex justify-start flex-col items-center bg-white h-screen">
                 <section className="pt-16 lg:pt-26 pb-10">
-                <HeroHeading className="flex items-center justify-center gap-4">
+                  <HeroHeading className="flex items-center justify-center gap-4">
                     <Image src="/client_garage.png" height={100} alt="Logo" width={100}/>
-                    Client Garage - Dashboard
-                </HeroHeading>
+                    <div className="flex flex-col gap-2">
+                      Client Garage - Dashboard
+                      <Welcome/>
+                    </div>
 
+                  </HeroHeading>
                 </section>
                 <section className="flex flex-row justify-center gap-14 w-full h-[425px] px-10 w-full">
                     <Sidebar/>

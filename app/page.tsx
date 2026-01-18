@@ -1,26 +1,40 @@
 'use client';
 import { useState } from "react";
-import { Heading1 } from "@/components/design/headings/heading-1";
+import { Heading2 } from "@/components/design/headings/heading-2";
 import { HeroHeading } from "@/components/design/headings/HeroHeading";
 import Image from "next/image";
 import { authClient } from "@/lib/auth-client";
-import { auth } from "@/lib/auth";
-
+type modus = 'signUp' | 'signIn';
 export default function Home() {
+  const [mode, setMode] = useState<modus>('signUp')
+  const { data: session } = authClient.useSession();
 
 
   async function handleSignUp (e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const fd = new FormData(e.currentTarget);
-    const data = Object.fromEntries(fd.entries());
-    const name =fd.get('name') as string;
+    const name = fd.get('name') as string;
     const email = fd.get('email') as string;
     const password = fd.get('password') as string;
     const callbackURL = "/dashboard"
     await authClient.signUp.email({
-      name, email, password, callbackURL
+      name, email, password, callbackURL, initialized: false
     })
   }
+
+    async function handleSignIn (e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const fd = new FormData(e.currentTarget);
+    const email = fd.get('email') as string;
+    const password = fd.get('password') as string;
+    const callbackURL = "/dashboard"
+    await authClient.signIn.email({
+      email:  email,
+      password: password,
+      callbackURL: callbackURL
+    })
+  }
+
 
 
   return (
@@ -32,14 +46,36 @@ export default function Home() {
             Client Garage - Dashboard
           </HeroHeading>
         </section>
-        <section id="auth">
-          <form onSubmit={handleSignUp} className="flex flex-col gap-4 max-w-md mx-auto">
-            <input name="name" placeholder="Name" className="px-3 py-2 border rounded" />
-            <input name="email" type="email" placeholder="Email" className="px-3 py-2 border rounded" />
-            <input name="password" type="password" placeholder="Password" className="px-3 py-2 border rounded" />
-            <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded">Sign up</button>
-          </form>
-        </section>
+        <div className="flex flex-col gap-4 justify-center items-center w-full">
+          <div className="w-full max-w-md mx-auto p-4">
+            <div className="text-center pb-8">
+              <Heading2>
+                {mode === 'signIn' ? 'Anmelden' : 'Registrieren'}
+              </Heading2>
+            </div>
+            <section id="auth" className="flex flex-col gap-4 w-full">
+              <div className="flex gap-4 justify-center">
+                <button onClick={() => setMode('signUp')} className={`${mode === 'signIn' ? 'hover:orange-bg-300' : 'bg-orange-500'} flex-1 p-4 cursor-pointer rounded-sm text-center`}>Registrieren</button>
+                <button onClick={()=> setMode('signIn')} className={`${mode === 'signIn' ? 'bg-orange-500' : 'hover:bg-orange-300'} flex-1 p-4 rounded-sm cursor-pointer text-center`}>Einloggen</button>
+              </div>
+
+              {mode === 'signIn' ? 
+                <form onSubmit={handleSignIn} className="flex flex-col gap-4 w-full">
+                  <input name="email" type="email" placeholder="Email" className="w-full px-3 py-2 border rounded" />
+                  <input name="password" type="password" placeholder="Password" className="w-full px-3 py-2 border rounded" />
+                  <button type="submit" className="w-full px-4 py-2 bg-blue-500 text-white rounded cursor-pointer">Einloggen</button>
+                </form>
+                : 
+                <form onSubmit={handleSignUp} className="flex flex-col gap-4 w-full">
+                  <input name="name" placeholder="Name" className="w-full px-3 py-2 border rounded" />
+                  <input name="email" type="email" placeholder="Email" className="w-full px-3 py-2 border rounded" />
+                  <input name="password" type="password" placeholder="Password" className="w-full px-3 py-2 border rounded" />
+                  <button type="submit" className="w-full px-4 py-2 bg-blue-500 text-white rounded cursor-pointer">Registrieren</button>
+                </form>
+              }
+            </section>
+          </div>
+        </div>
       </main>
     </div>
   );

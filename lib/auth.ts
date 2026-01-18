@@ -1,25 +1,28 @@
 import { betterAuth } from "better-auth";
+import { organization } from "better-auth/plugins";
 import Database from "better-sqlite3";
-import db from "./db";
 
 export const auth = betterAuth({
 	database: new Database("dev.db"),
 	emailAndPassword: {
 		enabled: true,
 	},
+	plugins: [
+		organization({
+			teams: {
+				enabled: true,
+			},
+		}),
+	],
 	user: {
 		deleteUser: {
 			enabled: true
 		},
 		additionalFields: {
-			isTeamAccount: {
+			initialized: {
 				type: "boolean",
-				required: false,
+				required: true,
 				defaultValue: false,
-			},
-			team: {
-				type: "string", // JSON string für Array
-				required: false,
 			},
 		},
 	},
@@ -27,5 +30,6 @@ export const auth = betterAuth({
 		database: {
 			useNumberId: true,
 		},
+		cookiePrefix: "client_garage",
 	},
 });
