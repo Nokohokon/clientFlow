@@ -5,7 +5,17 @@ export interface client {
     projects: number,
     createdAt: string,
     updatedAt: string,
+    responsiblePerson?: number,
+    responsibleTeam?: number,
+    type: "person" | "team",
+}
 
+export interface profile {
+    id: number,
+    name: string,
+    email: string, 
+    isTeamAccount: boolean,
+    team?: number[],
 }
 
 export interface project {
@@ -22,7 +32,7 @@ export interface project {
 
 export interface deletion {
     projectId: number,
-    clientId: number
+    clientId: number,
     status: string,
 }
 

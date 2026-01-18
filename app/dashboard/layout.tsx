@@ -3,8 +3,8 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "../globals.css";
 import { HeroHeading } from "@/components/design/headings/HeroHeading";
 import Image from "next/image";
-import Link from "next/link";
 import Sidebar from "@/components/layout/sidebar";
+import Breadcrumb from "@/components/layout/Breadcrumb";
 
 
 const geistSans = Geist({
@@ -32,19 +32,24 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <section className="pt-16 lg:pt-26 pb-10">
-          <HeroHeading className="flex items-center justify-center gap-4">
-            <Image src="/client_garage.png" height={100} alt="Logo" width={100}/>
-            Client Garage - Dashboard
-          </HeroHeading>
-          <p className="mt-4 text-left text-base text-gray-600 px-10">
-            <Link href={"/"} className="hover:text-gray-800">Home</Link> &gt; <Link href={"/dashboard"} className="hover:text-gray-800">Dashboard</Link>
-          </p>
-        </section>
-        <section className="flex flex-row justify-between gap-14 w-full h-[350px] px-10">
-            <Sidebar/>
-            {children}
-        </section>
+        <main>
+            <div className="flex justify-start flex-col items-center bg-white h-screen">
+                <section className="pt-16 lg:pt-26 pb-10">
+                <HeroHeading className="flex items-center justify-center gap-4">
+                    <Image src="/client_garage.png" height={100} alt="Logo" width={100}/>
+                    Client Garage - Dashboard
+                </HeroHeading>
+
+                </section>
+                <section className="flex flex-row justify-center gap-14 w-full h-[425px] px-10 w-full">
+                    <Sidebar/>
+                    <div className="flex flex-col">
+                        <Breadcrumb/> 
+                        {children}
+                    </div>
+                </section>
+            </div>
+        </main>
       </body>
     </html>
   );
