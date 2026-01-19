@@ -1,13 +1,13 @@
-// User Interface (dein ehemaliges "profile") - Better Auth managed
+// User Interface, du als User quasi.
 export interface User {
-	id: string, // Better Auth nutzt string IDs
+	id: string, // Better Auth User ID.
 	name: string,
 	email: string,
 	initialized: boolean,
 	// Teams werden über Better Auth Organization verwaltet
 }
 
-// Client bleibt größtenteils gleich
+// CLient Interface mit Better Auth Referenzen
 export interface Client {
 	id: number,
 	name: string,
@@ -32,11 +32,9 @@ export interface Project {
 	updatedAt: string,
 }
 
-// Deletion bleibt gleich
+// Deletion - für den Fall, dass ich das iwann brauche.
 export interface Deletion {
 	projectId: number,
 	clientId: number,
 	status: string,
 }
-
-// Team Interface entfällt - wird durch Better Auth Organization ersetzt

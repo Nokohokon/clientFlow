@@ -2,8 +2,10 @@ import Database from 'better-sqlite3';
 
 const db = new Database('dev.db');
 
-// Nur noch deine Business-spezifischen Tabellen
+
 // Better Auth erstellt automatisch: user, session, account, organization, member, team, invitation
+
+// Erstellung von clients Tabelle, projects und deletions tabelle. Benötigt für ./actions.ts und ./types.ts ig?
 db.exec(`
   CREATE TABLE IF NOT EXISTS clients (
     id INTEGER PRIMARY KEY AUTOINCREMENT,

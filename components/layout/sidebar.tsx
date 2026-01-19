@@ -1,12 +1,12 @@
 'use client'
 
-import Link from "next/link"
-import Dashboard from "@/app/dashboard/page"
-import { usePathname } from "next/navigation"
+import Link from "next/link" // Importiere Link um halt zu verlinken. lol
+import { usePathname } from "next/navigation" // Um hervorzuheben (Ästhetisch :D )
 
-export default function Sidebar () {
-    const pathname = usePathname()
-    return (
+export default function Sidebar () { // Funktion erstellen
+
+    const pathname = usePathname() // Pathname initialisieren
+    return ( // Quasi immer checken ob der aktuelle Path ist, wenn ja wird ästhetissch hervorgehoben. Mit Verlinken zuden anderen Teilen. 
         <div className="border border-orange-800 text-black text-center p-4 justify-center rounded-3xl h-full flex flex-col justify-center">
             <div className="flex flex-col h-full justify-center items-center">                
                 <Link href="/dashboard" className={`${pathname === "/dashboard" ? 'text-blue-500 hover:text-black hover:bg-blue-500 ' : ''} hover:bg-blue-300 my-2 p-2 rounded cursor-pointer`} >Dashboard</Link>

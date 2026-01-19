@@ -1,5 +1,7 @@
+// Steht alles in ../wiki/betterAuth.md
+
 import { betterAuth } from "better-auth";
-import { organization } from "better-auth/plugins";
+import { organization } from "better-auth/plugins"; 
 import Database from "better-sqlite3";
 
 export const auth = betterAuth({

@@ -1,3 +1,5 @@
+// Steht alles in ../wiki/betterAuth.md
+
 import { createAuthClient } from "better-auth/react"; // Use React import
 import { organizationClient } from "better-auth/client/plugins";
 import { inferAdditionalFields } from "better-auth/client/plugins";

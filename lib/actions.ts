@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { headers } from 'next/headers';
 import { auth } from './auth';
-import { Client, Project, Deletion } from './types';
+import { Client, Project, Deletion, User } from './types';
 import db from './db';
 
 // ================ ORGANIZATION ACTIONS (ersetzt Team Actions) ================
@@ -123,10 +123,69 @@ export async function getClients() {
 	return clients as Client[];
 }
 
+export async function getUserClients(id: User["id"]) {
+	const clients = db.prepare('SELECT * FROM clients WHERE responsiblePersonId = (?)').all(id);
+	return clients as Client[];
+}
+
 export async function getClient(id: Client["id"]) {
 	const client = db.prepare('SELECT * FROM clients WHERE id = (?)').get(id);
 	return client as Client | undefined;
 }
+
+interface dashboardData {
+	clientNumber: number,
+	runningProjects: number,
+	organisations: number,
+	organisationProjects: number,
+	teamNumbers: number
+}
+
+export async function getUserDashboardData(userId: string) {
+	// Zahl der Clients, für die der Nutzer verantwortlich ist
+	const clients = db.prepare('SELECT id FROM clients WHERE responsiblePersonId = (?)').all(userId) as { id: number }[];
+	const clientNumber = clients.length;
+
+	let runningProjects = 0;
+	let organisationProjects = 0;
+	let organisations = 0;
+	let teamNumbers = 0;
+
+	if (clientNumber > 0) {
+		const clientIds = clients.map(c => c.id);
+		const placeholders = clientIds.map(() => '?').join(',');
+
+		const rpStmt = db.prepare(`SELECT COUNT(*) as count FROM projects WHERE finished = 0 AND clientId IN (${placeholders})`);
+		const rpRow = rpStmt.get(...clientIds) as { count: number } | undefined;
+		runningProjects = rpRow ? Number(rpRow.count) : 0;
+
+		const tnStmt = db.prepare(`SELECT COUNT(DISTINCT teamId) as count FROM projects WHERE clientId IN (${placeholders}) AND teamId IS NOT NULL`);
+		const tnRow = tnStmt.get(...clientIds) as { count: number } | undefined;
+		teamNumbers = tnRow ? Number(tnRow.count) : 0;
+	}
+
+	// Anzahl unterschiedlicher Organisationen, die in den Clients des Nutzers referenziert werden
+	const orgsCountRow = db.prepare('SELECT COUNT(DISTINCT responsibleOrganizationId) as count FROM clients WHERE responsiblePersonId = (?) AND responsibleOrganizationId IS NOT NULL').get(userId) as { count: number } | undefined;
+	organisations = orgsCountRow ? Number(orgsCountRow.count) : 0;
+
+	if (organisations > 0) {
+		const orgRows = db.prepare('SELECT DISTINCT responsibleOrganizationId as orgId FROM clients WHERE responsiblePersonId = (?) AND responsibleOrganizationId IS NOT NULL').all(userId) as { orgId: string }[];
+		const orgIds = orgRows.map(r => r.orgId);
+		const placeholdersOrg = orgIds.map(() => '?').join(',');
+		const opStmt = db.prepare(`SELECT COUNT(*) as count FROM projects WHERE organizationId IN (${placeholdersOrg})`);
+		const opRow = opStmt.get(...orgIds) as { count: number } | undefined;
+		organisationProjects = opRow ? Number(opRow.count) : 0;
+	}
+
+	return {
+		clientNumber,
+		runningProjects,
+		organisations,
+		organisationProjects,
+		teamNumbers
+	} as dashboardData;
+}
+
 
 export async function createClient(
 	name: Client["name"],
