@@ -57,7 +57,7 @@ export default function Home() {
         <section className="py-20 lg:py-32">
           <HeroHeading className="flex items-center gap-4">
             <Image src="/client_garage.png" height={100} alt="Logo" width={100}/>
-            Client Garage - Dashboard 
+            Client Garage - Dashboard {session?.user.name}
           </HeroHeading>
         </section>
         <div className="flex flex-col gap-4 justify-center items-center w-full">

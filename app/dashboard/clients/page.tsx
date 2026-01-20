@@ -1,6 +1,6 @@
 'use client'
 import Link from "next/link";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { Client } from "@/lib/types";
 import { Trash } from "lucide-react";
 import { Heading3 } from "@/components/design/headings/heading-3"; // Custom headings
@@ -9,9 +9,20 @@ import { authClient } from "@/lib/auth-client";
 import { showToast } from "nextjs-toast-notify"; // Lets use toasts lol. 
 import { Loading } from "@/components/design/system/Loading"; // You spin me right round. oder auch nd fuuuck
 
+
 interface userCreate {
     name: string,
     email: string, // Quasi was man beim user eingeben muss zum erstellen
+}
+
+
+type filter = 'name' | 'email' | 'projects' | 'createdAt' | 'updatedAt';
+
+type filterMode = 'asc' | 'desc'
+
+interface filterOptions {
+    label: string,
+    value: filter
 }
 
 export default function ClientPage () {
@@ -22,9 +33,39 @@ export default function ClientPage () {
     const [isCreating, setIsCreating] = useState<boolean>(false);
     const [isDeleting, setIsDeleting] = useState<Client["id"][]>([]); // Quasi eif nur useStates um sachen anzuzeigen 
     const [isLoading, setIsLoading] = useState<boolean>(true);
+
+    const [filterMode, setFilterMode] = useState<filterMode>('asc')
+
+    const [filter, setFilter] = useState<filter>('name'); // Filter für clients
     const { data: session } = authClient.useSession(); // Auth session
 
+    const filterOptions: filterOptions[] = [
+        {label: 'Name', value: 'name'}, {label: 'E-Mail', value: 'email'}, {label: 'Projektanzahl', value: 'projects'}, {label: 'Erstellungsdatum', value: 'createdAt'}, {label: 'Aktualisierungsdatum', value: 'updatedAt'}
+    ]
 
+
+    const sortedClients = useMemo(() => {
+        if (!clients || clients.length === 0) return clients;
+        const sorted = [...clients];
+        switch (filter) {
+            case 'name':
+                filterMode == 'asc' ? sorted.sort((a, b) => a.name.localeCompare(b.name)) : sorted.sort((a, b) => b.name.localeCompare(a.name));
+                break;
+            case 'email':
+                filterMode == 'asc' ? sorted.sort((a, b) => a.email.localeCompare(b.email)) : sorted.sort((a, b) => b.email.localeCompare(a.email));
+                break;
+            case 'createdAt':
+                filterMode == 'asc' ? sorted.sort((a, b) => (new Date(a.createdAt ?? 0).getTime() - new Date(b.createdAt ?? 0).getTime())) : sorted.sort((a, b) => (new Date(b.createdAt ?? 0).getTime() - new Date(a.createdAt ?? 0).getTime()));
+                break;
+            case 'updatedAt':
+                filterMode == 'asc' ? sorted.sort((a, b) => (new Date(a.updatedAt ?? 0).getTime() - new Date(b.updatedAt ?? 0).getTime())) : sorted.sort((a, b) => (new Date(b.updatedAt ?? 0).getTime() - new Date(a.updatedAt ?? 0).getTime()));
+                break;
+            case 'projects':
+                filterMode == 'asc' ? sorted.sort((a, b) => (a.projects ?? 0) - (b.projects ?? 0)) : sorted.sort((a, b) => (b.projects ?? 0) - (a.projects ?? 0));
+                break;
+        }
+        return sorted;
+    }, [clients, filter, filterMode]);
 
     useEffect(() => {
         async function load_data() { // Daten von api holen
@@ -33,8 +74,9 @@ export default function ClientPage () {
                 if (!response.ok) throw new Error(`Fetch failed: ${response.status}`);
                 const data = await response.json();
                 console.log('Loaded clients data:', data);
-                setClients(data.clientsData ?? []);
-                setMaxPage(Math.max(1, Math.ceil((data.clientsData ?? []).length / 10)));
+                setClients(data.clients ?? []);
+                console.log('Clients set to:', data.clients ?? []);
+                setMaxPage(Math.max(1, Math.ceil((data.clients ?? []).length / 10)));
             } catch (err) {
                 console.error('Error loading clients', err);
                 setClients([]);
@@ -138,7 +180,29 @@ export default function ClientPage () {
                 <div className="justify-center items-center flex ">
                     <button onClick={() => setShowCreateModal(!showCreateModal)} className="p-4 rounded-sm bg-green-500 hover:bg-green-700 text-black cursor-pointer hover:text-white">Kunden erstellen</button>
                 </div>
-                <p>dropdown</p>
+                <div className="flex items-center  gap-4">
+                    <div className="flex items-center flex-col gap-2 items-end ">
+                        <select
+                            id="client-filter"
+                            value={filter}
+                            onChange={(e) => setFilter(e.target.value as filter)}
+                            className="border rounded px-2 py-1 text-sm"
+                        >
+                            {filterOptions.map((opt) => (
+                                <option key={opt.value} value={opt.value}>{opt.label}</option>
+                            ))}
+                        </select>
+                        <select
+                            id="filter-mode"
+                            value={filterMode}
+                            onChange={(e) => setFilterMode(e.target.value as filterMode)}
+                            className="border rounded px-2 py-1 text-sm"
+                        >
+                            <option key='asc' value={'asc'}>Aufsteigend</option>
+                            <option key='desc' value={'desc'}>Absteigend</option>
+                        </select>
+                    </div>
+                </div>
             </div>
             <table className="min-w-full border ">
                 <thead>
@@ -155,15 +219,15 @@ export default function ClientPage () {
                     <tr>
                         <td colSpan={6} className="text-center p-4">{'--'.repeat(50)}</td>
                     </tr>
-                {clients.slice((page-1)*10,page*10).map((client:Client, idx) => {
+                {(sortedClients ?? clients).slice((page-1)*10,page*10).map((client:Client, idx) => {
                     const key = client.id ?? client.email ?? idx;
                     const created = client.createdAt ? new Date(client.createdAt).toLocaleString() : '-';
                     const updated = client.updatedAt ? new Date(client.updatedAt).toLocaleString() : '-'; { /* Das hier is alles Render logik, also sachen werden errechnet und dann halt angezeigt. */ }
                     return (
                         <tr key={key} className="border-t">
-                            <td className="px-2 py-1"><Link href={`/dashboards/clients/${client.id}`}>{client.name}</Link></td>
-                            <td className="px-2 py-1"><Link href={`/dashboards/clients/${client.id}/email`}>{client.email}</Link></td>
-                            <td className="px-2 py-1"><Link href={`/dashboards/clients/${client.id}/projects`}>{client.projects ?? 0}</Link></td>
+                            <td className="px-2 py-1"><Link href={`/dashboard/clients/${client.id}`}>{client.name}</Link></td>
+                            <td className="px-2 py-1"><Link href={`/dashboard/clients/${client.id}/email`}>{client.email}</Link></td>
+                            <td className="px-2 py-1"><Link href={`/dashboard/clients/${client.id}/projects`}>{client.projects ?? 0}</Link></td>
                             <td className="px-2 py-1">{created}</td>
                             <td className="px-2 py-1">{updated}</td>
                             <td className="px-2 py-1">

@@ -15,8 +15,9 @@ export async function GET (request: Request) {
     if (!session) {
         return NextResponse.json({status: 401})
     } else { 
-        const data = getUserClients(session.user.id);
-        return NextResponse.json({status: 200, clients: data})
+        const data = await getUserClients(session.user.id);
+        console.log('Fetched clients for user:', session.user.id, data);
+        return NextResponse.json({status: 200, clients: data});
     }
 }
 

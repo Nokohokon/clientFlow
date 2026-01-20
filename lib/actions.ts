@@ -125,6 +125,7 @@ export async function getClients() {
 
 export async function getUserClients(id: User["id"]) {
 	const clients = db.prepare('SELECT * FROM clients WHERE responsiblePersonId = (?)').all(id);
+	console.log('getUserClients for userId:', id, clients);
 	return clients as Client[];
 }
 
@@ -265,14 +266,31 @@ export async function createProject(
 	organizationId ? : string,
 	teamId ? : string
 ) {
+	// ensure client exists to avoid foreign key constraint errors
+	const clientRow = db.prepare('SELECT id FROM clients WHERE id = (?)').get(clientId);
+	if (!clientRow) {
+		return { status: 404, error: 'Client not found', project: null };
+	}
+
 	const insert = db.prepare(`
-    INSERT INTO projects (title, clientId, finished, organizationId, teamId, createdAt, updatedAt) 
-    VALUES (?, ?, ?, ?, ?, ?, ?)
+	INSERT INTO projects (title, clientId, finished, organizationId, teamId, createdAt, updatedAt) 
+	VALUES (?, ?, ?, ?, ?, ?, ?)
   `);
 	const now = new Date().toISOString();
-	insert.run(title, clientId, false, organizationId || null, teamId || null, now, now);
+	console.log(title,clientId,0, organizationId || null, teamId || null, now, now)
+	console.log(typeof(clientId))
 
-	db.prepare('UPDATE clients SET projects = projects + 1 WHERE id = (?)').run(clientId);
+	try {
+		insert.run(title, clientId, 0, organizationId || null, teamId || null, now, now);
+		db.prepare('UPDATE clients SET projects = projects + 1 WHERE id = (?)').run(clientId);
+	} catch (err: any) {
+		// return a clearer error instead of crashing the server
+		if (err && err.code === 'SQLITE_CONSTRAINT_FOREIGNKEY') {
+			return { status: 400, error: 'Foreign key constraint failed', detail: err.message };
+		}
+		return { status: 500, error: 'Database error', detail: err?.message };
+	}
+
 	revalidatePath('/');
 
 	const newProject = db.prepare('SELECT * FROM projects WHERE title = (?) AND clientId = (?)').get(title, clientId) as Project;
@@ -299,7 +317,7 @@ export async function toggleProjectFinished(id: Project["id"]) {
 
 	const stmt = db.prepare('UPDATE projects SET finished = ?, updatedAt = ? WHERE id = ?');
 	const now = new Date().toISOString();
-	stmt.run(newStatus, now, id);
+	stmt.run(newStatus ? 1 : 0, now, id);
 
 	revalidatePath('/');
 	return { status: 200, finished: newStatus };
