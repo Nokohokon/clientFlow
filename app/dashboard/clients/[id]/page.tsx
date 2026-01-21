@@ -6,11 +6,10 @@ import { Loading } from "@/components/design/system/Loading"
 import { Heading3 } from "@/components/design/headings/heading-3"
 import { Heading4 } from "@/components/design/headings/heading-4"
 import ClientCard from "@/components/design/cards/ClientCard"
-import { Calendar, BookmarkCheck, HandCoins, Bookmark, NotebookPen, ClockArrowDown, Trash  } from "lucide-react"
+import { Calendar, BookmarkCheck, HandCoins, Bookmark, NotebookPen, ClockArrowDown, Trash, Phone, MailCheck   } from "lucide-react"
 import { authClient } from "@/lib/auth-client"
 import { useMemo } from "react"
 import { createProject, deleteProject } from "@/lib/actions"
-import { create } from "domain"
 import { showToast } from "nextjs-toast-notify"
 
 
@@ -189,11 +188,11 @@ export default function ClientPage({
                     Projekte: {clientData?.projects}
                 </Heading3>
             </section>
-            <section id="cards" className="grid grid-cols-3 gap-5 my-5">
+            <section id="cards" className="grid grid-cols-2 gap-5 my-5">
 
                 <ClientCard className="flex flex-col items-start bg-orange-300">
-                    <div className="flex gap-4 items-center"><Calendar /> Erstellt am: {clientData?.createdAt.toDateString().slice(4)}</div>
-                    <div className="flex gap-4 items-center "><Calendar /> Aktualisiert am: {clientData?.updatedAt.toDateString().slice(4)}</div>
+                    <div className="flex gap-4 items-center justify-between w-full"><p className="flex items-center"><Calendar /> Erstellt am:</p> {clientData?.createdAt.toDateString().slice(4)}</div>
+                    <div className="flex gap-4 items-center justify-between w-full"><p className="flex items-center"><Calendar /> Aktualisiert am:</p> {clientData?.updatedAt.toDateString().slice(4)}</div>
                 </ClientCard>
                 <ClientCard className="flex flex-col items-start bg-green-300">
                     <div className="flex items-center gap-4">
@@ -211,6 +210,15 @@ export default function ClientPage({
                         <BookmarkCheck/> {clientProjects.filter((project) => project.finished == true).length} Projekte abgeschlossen
                     </div>
                 </ClientCard>
+                <ClientCard className="flex flex-col items-start bg-amber-300">
+                    <div className="flex items-center gap-4">
+                        <Phone/> {clientProjects.length} Telefonnummer
+                    </div>
+                    <div className="flex items-center gap-4">
+                        <MailCheck/> {clientProjects.length} Email
+                    </div>
+                </ClientCard>
+
             </section>
             <section id="projects" className="mt-10 flex flex-col">
             <div className="flex justify-between items-center mb-4"> {/* Quasi ne fette Tabelle mit allen Clients. */}
