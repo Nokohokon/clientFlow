@@ -41,7 +41,7 @@ export default function DashboardLayout({
               </HeroHeading>
               
             </section>
-            <section className="flex flex-row justify-center gap-14 w-full h-[425px] px-10 w-full">
+            <section className="flex flex-row justify-center gap-14 w-full min-h-[425px] px-10">
                 <Sidebar/> {/* Sidebar halt */}
                 <div className="flex flex-col ">
                     <Breadcrumb/> {/* Breadcrumb mein löwe mein bär */}
