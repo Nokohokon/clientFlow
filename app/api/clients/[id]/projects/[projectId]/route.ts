@@ -34,8 +34,8 @@ export async function GET(
         status: 200,
         project: project,
         person: {
-          name: session?.user.name,
-          email: session?.user.email,
+          name: client.name,
+          email: client.email,
         }
       }
       return NextResponse.json(resp)

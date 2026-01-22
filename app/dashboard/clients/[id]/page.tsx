@@ -197,7 +197,23 @@ export default function ClientPage({
     }
 
     async function handleCompletion () {
-
+        const resp = await updateClient(clientData!.id, {completed: !clientData!.completed == true ? 1 : 0});
+        if (resp.status == 200) {
+            setClientData(prev => prev ? { ...prev, completed: !prev.completed } : prev);
+            showToast.success('Klient erfolgreich aktualisiert!', {
+                duration: 4000,
+                position: 'top-right',
+                transition: 'bounceIn',
+                progress: true
+            });
+        } else {
+            showToast.error('Klient konnte nicht aktualisiert werden.', {
+                duration: 4000,
+                position: 'top-right',
+                transition: 'bounceIn',
+                progress: true
+            });
+        }
     } 
 
     if (loading) {
@@ -285,8 +301,8 @@ export default function ClientPage({
             )}
 
             <section className="flex flex-col">
-                <div className={`p-2 rounded-lg border mt-5 border-gray-900 ${clientData?.completed ? 'bg-red-500' : 'bg-green-500'}`}>
-                    {clientData?.completed ? <p className="flex items-center"><Check/> In Bearbeitung</p> : <p className="flex items-center"><X/> Abgeschlossen</p> }
+                <div className={`p-2 rounded-lg border mt-5 border-gray-900 ${clientData?.completed ? 'bg-green-500' : 'bg-red-500'}`}>
+                    {clientData?.completed ? <p className="flex items-center"><Check/> Abgeschlossen</p> : <p className="flex items-center"><X/> In Bearbeitung</p> }
                 </div>
                 <div className="flex flex-row justify-between items-start mt-5">
                     <Heading3 className="flex items-center gap-4">
