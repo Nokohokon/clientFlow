@@ -18,6 +18,7 @@ export interface Client {
 	responsiblePersonId ? : string, // Better Auth User ID
 	responsibleOrganizationId ? : string, // Better Auth Organization ID
 	type: "person" | "organization",
+	completed: boolean | number,
 }
 
 // Project mit Better Auth Organization/Team Referenzen

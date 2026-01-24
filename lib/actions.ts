@@ -213,7 +213,19 @@ export async function createClient(
 }
 
 export async function updateClient(id: Client["id"], data: Partial < Omit < Client, "id" | "createdAt" | "projects" >> ) {
-	const fields = Object.keys(data) as(keyof typeof data)[];
+	// If an email is provided, ensure it's not already used by another client
+	if (data.email) {
+		const existing = db.prepare('SELECT id FROM clients WHERE email = (?)').get(data.email as string) as { id: Client["id"] } | undefined;
+		if (existing && String(existing.id) !== String(id)) {
+			return { status: 15023, client: null };
+		}
+	}
+
+	const fields = Object.keys(data) as (keyof typeof data)[];
+	if (fields.length === 0) {
+		return { status: 400, error: 'No fields to update', client: null };
+	}
+
 	const setClause = fields.map(field => `${field} = ?`).join(', ');
 	const values = fields.map(field => data[field]);
 

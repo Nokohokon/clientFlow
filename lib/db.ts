@@ -16,7 +16,11 @@ db.exec(`
     updatedAt TEXT DEFAULT CURRENT_TIMESTAMP,
     responsiblePersonId INTEGER, -- Better Auth User ID (string)
     responsibleOrganizationId TEXT, -- Better Auth Organization ID (string)
-    type TEXT CHECK(type IN ('person', 'organization')) NOT NULL
+    type TEXT CHECK(type IN ('person', 'organization')) NOT NULL,
+    completed BOOLEAN DEFAULT FALSE,
+    phone TEXT,
+    address TEXT
+  
   );
 
   CREATE TABLE IF NOT EXISTS projects (
