@@ -93,7 +93,7 @@ export default function ClientPage({
 
             <section className="mt-6">
                 <Heading4>Beschreibung</Heading4>
-                <p className="mt-2 text-gray-700">{projectData?.description ?? 'Keine Beschreibung vorhanden.'}</p>
+                <p className="mt-2 text-gray-700"> Keine Beschreibung vorhanden.</p>
             </section>
 
         </div>

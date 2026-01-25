@@ -15,7 +15,7 @@ export async function getOrganizations() {
 	return data;
 }
 
-export async function createOrganization(name: string, slug: string) {
+export async function createOrganization(name: string, slug: string) {	
 	const data = await auth.api.createOrganization({
 		body: {
 			name,
@@ -24,6 +24,7 @@ export async function createOrganization(name: string, slug: string) {
 		headers: await headers(),
 	});
 	revalidatePath('/');
+	await insertAction('createOrganization', `Created organization ${name}`);
 	return data;
 }
 
@@ -54,6 +55,7 @@ export async function inviteOrganizationMember(email: string, role: "admin" | "m
 		headers: await headers(),
 	});
 	revalidatePath('/');
+	await insertAction('inviteOrganizationMember', `Invited ${email} as ${role}`);
 	return data;
 }
 
@@ -67,6 +69,7 @@ export async function createTeam(name: string, organizationId ? : string) {
 		},
 		headers: await headers(),
 	});
+	await insertAction('createTeam', `Created team ${name}`);
 	revalidatePath('/');
 	return data;
 }
@@ -89,6 +92,7 @@ export async function addTeamMember(teamId: string, userId: string) {
 		},
 		headers: await headers(),
 	});
+	await insertAction('addTeamMember', `Added user ${userId} to team ${teamId}`);
 	revalidatePath('/');
 	return data;
 }
@@ -101,6 +105,7 @@ export async function removeTeamMember(teamId: string, userId: string) {
 		},
 		headers: await headers(),
 	});
+	await insertAction('removeTeamMember', `Removed user ${userId} from team ${teamId}`);
 	revalidatePath('/');
 	return data;
 }
@@ -178,12 +183,15 @@ export async function getUserDashboardData(userId: string) {
 		organisationProjects = opRow ? Number(opRow.count) : 0;
 	}
 
+	const latestActions = db.prepare('SELECT * FROM actions ORDER BY timestamp DESC LIMIT 5').all();
+
 	return {
 		clientNumber,
 		runningProjects,
 		organisations,
 		organisationProjects,
-		teamNumbers
+		teamNumbers,
+		latestActions
 	} as dashboardData;
 }
 
@@ -208,9 +216,11 @@ export async function createClient(
 	insert.run(name, email, responsiblePersonId || null, responsibleOrganizationId || null, type, now, now);
 
 	const newClient = db.prepare('SELECT * FROM clients WHERE email = (?)').get(email as string) as Client;
+	await insertAction('createClient', `Created client ${name} with email ${email}`);
 	revalidatePath('/');
 	return { status: 200, client: newClient };
 }
+
 
 export async function updateClient(id: Client["id"], data: Partial < Omit < Client, "id" | "createdAt" | "projects" >> ) {
 	// If an email is provided, ensure it's not already used by another client
@@ -234,6 +244,7 @@ export async function updateClient(id: Client["id"], data: Partial < Omit < Clie
 	stmt.run(...values, now, id);
 
 	const updatedClient = db.prepare('SELECT * FROM clients WHERE id = (?)').get(id) as Client;
+	await insertAction('updateClient', `Updated client ${updatedClient.name} (ID: ${id})`);
 	revalidatePath('/');
 	return { status: 200, client: updatedClient };
 }
@@ -241,8 +252,20 @@ export async function updateClient(id: Client["id"], data: Partial < Omit < Clie
 export async function deleteClient(id: Client["id"]) {
 	db.prepare('DELETE FROM projects WHERE clientId = (?)').run(id);
 	db.prepare('DELETE FROM clients WHERE id = (?)').run(id);
+	await insertAction('deleteClient', `Deleted client with ID ${id}`);
 	revalidatePath('/');
 	return { status: 200 };
+}
+
+export async function insertAction(actionType: string, description: string) {
+	const session = await auth.api.getSession({
+		headers: await headers(),
+	});
+	const userId = session?.user.id || 'unknown';
+	const insert = db.prepare('INSERT INTO actions (userId, actionType, description, timestamp) VALUES (?, ?, ?)');
+	const now = new Date().toISOString();
+	insert.run(userId, actionType, description, now);
+	revalidatePath('/');
 }
 
 // ================ PROJECT ACTIONS ================
@@ -303,6 +326,8 @@ export async function createProject(
 		return { status: 500, error: 'Database error', detail: err?.message };
 	}
 
+	await insertAction('createProject', `Created project ${title} for client ID ${clientId}`);
+
 	revalidatePath('/');
 
 	const newProject = db.prepare('SELECT * FROM projects WHERE title = (?) AND clientId = (?)').get(title, clientId) as Project;
@@ -319,6 +344,7 @@ export async function updateProject(id: Project["id"], data: Partial < Omit < Pr
 	stmt.run(...values, now, id);
 
 	const updatedProject = db.prepare('SELECT * FROM projects WHERE id = (?)').get(id) as Project;
+	await insertAction('updateProject', `Updated project ${updatedProject.title} (ID: ${id})`);
 	revalidatePath('/');
 	return { status: 200, project: updatedProject };
 }
@@ -330,6 +356,7 @@ export async function toggleProjectFinished(id: Project["id"]) {
 	const stmt = db.prepare('UPDATE projects SET finished = ?, updatedAt = ? WHERE id = ?');
 	const now = new Date().toISOString();
 	stmt.run(newStatus ? 1 : 0, now, id);
+	await insertAction('toggleProjectFinished', `Set project ID ${id} finished status to ${newStatus}`);
 
 	revalidatePath('/');
 	return { status: 200, finished: newStatus };
@@ -344,6 +371,7 @@ export async function deleteProject(id: Project["id"]) {
 	if (clientId !== null && typeof clientId !== 'undefined') {
 		db.prepare('UPDATE clients SET projects = projects - 1 WHERE id = (?)').run(clientId);
 	}
+	await insertAction('deleteProject', `Deleted project with ID ${id}`);
 
 	revalidatePath('/');
 	return { status: 200 };
@@ -361,6 +389,7 @@ export async function createDeletion(projectId: Deletion["projectId"], clientId:
 	insert.run(projectId, clientId, status);
 
 	const newDeletion = db.prepare('SELECT * FROM deletions WHERE projectId = (?) AND clientId = (?)').get(projectId, clientId) as Deletion;
+	await insertAction('createDeletion', `Created deletion for project ID ${projectId} and client ID ${clientId}`);
 	revalidatePath('/');
 	return { status: 200, deletion: newDeletion };
 }
@@ -368,13 +397,14 @@ export async function createDeletion(projectId: Deletion["projectId"], clientId:
 export async function updateDeletionStatus(projectId: Deletion["projectId"], clientId: Deletion["clientId"], status: Deletion["status"]) {
 	const stmt = db.prepare('UPDATE deletions SET status = ? WHERE projectId = (?) AND clientId = (?)');
 	stmt.run(status, projectId, clientId);
-
+	await insertAction('updateDeletionStatus', `Updated deletion status for project ID ${projectId} and client ID ${clientId} to ${status}`);
 	revalidatePath('/');
 	return { status: 200 };
 }
 
 export async function deleteDeletion(projectId: Deletion["projectId"], clientId: Deletion["clientId"]) {
 	db.prepare('DELETE FROM deletions WHERE projectId = (?) AND clientId = (?)').run(projectId, clientId);
+	await insertAction('deleteDeletion', `Deleted deletion for project ID ${projectId} and client ID ${clientId}`);
 	revalidatePath('/');
 	return { status: 200 };
 }

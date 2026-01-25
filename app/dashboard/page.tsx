@@ -9,12 +9,20 @@ import { authClient } from "@/lib/auth-client";
 import { Loading } from "@/components/design/system/Loading"; // Loading Komponente
 import { Heading3 } from "@/components/design/headings/heading-3";
 
+
+interface action {
+    type: string,
+    description: string,
+    date: Date,
+}
+
 interface dashboardData { // Was quasi von API übermittelt werdenb soll.
     clientNumber: number,
     runningProjects: number,
     organisations: number,
     organisationProjects: number,
-    teamNumbers: number
+    teamNumbers: number,
+    latestActions: Array<any>,
 }
 
 export default function DashboardPage() { // Dashboard Page Komponente

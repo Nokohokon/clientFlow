@@ -42,6 +42,14 @@ db.exec(`
     FOREIGN KEY (projectId) REFERENCES projects (id),
     FOREIGN KEY (clientId) REFERENCES clients (id)
   );
+
+  CREATE TABLE IF NOT EXISTS actions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    actionType TEXT NOT NULL,
+    entityType TEXT NOT NULL,
+    entityId INTEGER NOT NULL,
+    timestamp TEXT DEFAULT CURRENT_TIMESTAMP
+  );
 `);
 
 export default db;
